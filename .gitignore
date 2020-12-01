@@ -1,7 +1,9 @@
-*
-!**/*.v
-!**/*.e
-!**/.gitignore
-!**/*.sh
-!**/*.md
+*.log
+*.elog
+**/cov_work/
+**/indago_logs/
+**/xcelium.d/
+**/.simvision/
+**xrun.history
+**xrun.key
 
