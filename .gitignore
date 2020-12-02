@@ -3,7 +3,10 @@
 **/cov_work/
 **/indago_logs/
 **/xcelium.d/
+**/xcelium.shm/
 **/.simvision/
 **xrun.history
 **xrun.key
+.idea/
+*.nfs**
 
