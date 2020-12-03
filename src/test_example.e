@@ -7,16 +7,16 @@
 <'
 
 extend instruction_s {
-//   keep cmd_in in [ADD,SUB,SHL,SHR];
-   keep cmd_in == ADD;
-   keep din1 < 100;
-   keep din2 < 10;
-}; // extend instruction_s
+   //keep cmd_in in [ADD,SUB,SHL,SHR];
+   keep cmd_in in [ADD];
+   keep din1 <= MAX_UINT;
+   keep din1 <= MAX_UINT;
+};
 
 
 extend driver_u {
    keep instructions_to_drive.size() == 100;
-}; // extend driver_u
+};
 
 
 '>

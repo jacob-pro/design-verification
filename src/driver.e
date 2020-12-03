@@ -69,15 +69,17 @@ unit driver_u {
 
       req1_cmd_in_p$  = 0000;  
       req1_data_in_p$ = pack(NULL, ins.din2);
-         
+
    }; // drive_instruction
 
 
    collect_response(ins : instruction_s) @clk is {
 
-      wait @resp; -- wait for the response
+        while (out_resp1_p$ == 0) {
+           wait cycle;
+        };
          
-      ins.resp = out_resp1_p$;
+      ins.resp = out_resp1_p$.as_a(response_t);
       ins.dout = out_data1_p$;
 
    }; // collect_response

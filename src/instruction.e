@@ -7,7 +7,7 @@
 <'
 
 type opcode_t : [ NOP, ADD, SUB, INV, INV1, SHL, SHR ] (bits:4);
-
+type response_t : [NO_RESPONSE, SUCCESS, INVALID, INTERNAL_ERROR] (bits: 2);
 
 struct instruction_s {
 
@@ -15,7 +15,7 @@ struct instruction_s {
    %din1   : uint (bits:32);
    %din2   : uint (bits:32);
 
-   !resp   : uint (bits:2);
+   !resp   : response_t;
    !dout   : uint (bits:32);
 
    check_response(ins : instruction_s) is empty;
@@ -25,28 +25,25 @@ struct instruction_s {
 
 extend instruction_s {
 
-   // example check for correct addition
-   when ADD'cmd_in instruction_s { 
+    when ADD'cmd_in instruction_s {
 
-     check_response(ins : instruction_s) is only {
+        check_response(ins : instruction_s) is only {
 
-       check that ins.resp == 01;
-       check that ins.dout == (ins.din1 + ins.din2) else
-       dut_error(appendf("[R==>Port 1 invalid output.<==R]\n \
-                          Instruction %s %d %d,\n \
-                          expected %032.32b \t %d,\n \
-                          received %032.32b \t %d.\n", 
-                          ins.cmd_in, ins.din1, ins.din2, 
-                          (ins.din1 + ins.din2),
-                          (ins.din1 + ins.din2), 
-                          ins.dout,ins.dout));
+            var expected_resp: response_t = SUCCESS;
+            var expected_dout: uint = ins.din1 + ins.din2;
 
-     }; // check_response
+            // Overflow case
+            if (expected_dout < ins.din1) {
+                expected_resp = INVALID;
+            };
 
-   }; // when 
+            check that ins.resp == expected_resp && ins.dout == expected_dout else
+            dut_error(appendf("[R==>Invalid add output.<==R]\n\t Instruction %s 0x%X 0x%X,\n\t expected %s 0x%X,\n\t received %s 0x%X \n",
+                          ins.cmd_in, ins.din1, ins.din2, expected_resp.as_a(string), expected_dout, ins.resp.as_a(string), ins.dout));
+        };
+    };
 
-}; // extend instruction_s
+};
 
 
 '>
-
