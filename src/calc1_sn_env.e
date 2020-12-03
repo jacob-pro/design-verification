@@ -1,7 +1,7 @@
 
-   Sample calc1_sn_env.e file
+   calc1_sn_env.e
    --------------------------
-   This file provides the basic structure for the calc1 
+   This file provides the basic structure for the calc1
    testbench environment.
 
    It extends sys by the unit driver, and extends the default setup and run

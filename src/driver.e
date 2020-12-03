@@ -75,14 +75,15 @@ unit driver_u {
 
    collect_response(ins : instruction_s) @clk is {
 
+        // Need to add timeout
         while (out_resp1_p$ == 0) {
            wait cycle;
         };
          
-      ins.resp = out_resp1_p$.as_a(response_t);
-      ins.dout = out_data1_p$;
+        ins.resp = out_resp1_p$.as_a(response_t);
+        ins.dout = out_data1_p$;
 
-   }; // collect_response
+   };
 
 
    drive() @clk is {
@@ -93,7 +94,7 @@ unit driver_u {
        
          drive_instruction(ins, index);
          collect_response(ins);
-         ins.check_response(ins);
+         ins.check_response();
          wait cycle;
 
       }; // for each instruction
