@@ -7,10 +7,9 @@
 <'
 
 extend instruction_s {
-    keep cmd_in in [ADD,SUB,SHL,SHR, NOP];
-    keep (cmd_in == SHL) => (din2 % 32) <= 15;
-    keep (cmd_in == SHR) => (din2 % 32) != 1;
-    //keep cmd_in == 9;
+    keep cmd_in in set_of_values(opcode_t);
+    keep (cmd_in.as_a(opcode_t) == SHL) => (din2 % 32) <= 15;
+    keep (cmd_in.as_a(opcode_t) == SHR) => (din2 % 32) != 1;
 };
 
 

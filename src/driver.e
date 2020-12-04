@@ -76,7 +76,7 @@ unit driver_u {
    collect_response(ins : instruction_s) @clk is {
 
         // Need to add timeout
-        if (ins.cmd_in == NOP) {
+        if (ins.cmd_in == opcode_t'NOP.as_a(uint)) {
             wait cycle;
         } else {
             while (out_resp1_p$ == 0) {
