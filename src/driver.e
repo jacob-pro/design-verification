@@ -56,10 +56,10 @@ unit driver_u {
    drive_instruction(ins : instruction_s, i : int) @clk is {
 
       // display generated command and data
-      outf("Command %s = %s\n", i, ins.cmd_in);
-      out("Op1     = ", ins.din1);
-      out("Op2     = ", ins.din2);
-      out();
+      //outf("Command %s = %s\n", i, ins.cmd_in);
+      //out("Op1     = ", ins.din1);
+      //out("Op2     = ", ins.din2);
+      //out();
 
       // drive data into calculator port 1
       req1_cmd_in_p$  = pack(NULL, ins.cmd_in);
@@ -76,10 +76,11 @@ unit driver_u {
    collect_response(ins : instruction_s) @clk is {
 
         // Need to add timeout
-        while (out_resp1_p$ == 0) {
-           wait cycle;
-        };
-         
+        //while (out_resp1_p$ == 0) {
+           //wait cycle;
+        //};
+         wait @resp;
+
         ins.resp = out_resp1_p$.as_a(response_t);
         ins.dout = out_data1_p$;
 

@@ -8,14 +8,13 @@
 
 extend instruction_s {
     //keep cmd_in in [ADD,SUB,SHL,SHR];
-    keep cmd_in in [ADD, SUB];
-    keep din1 <= MAX_UINT;
-    keep din1 <= MAX_UINT;
+    keep cmd_in in [SHR];
+    keep (din2 % 32) != 1;
 };
 
 
 extend driver_u {
-    keep instructions_to_drive.size() == 200;
+    keep instructions_to_drive.size() == 300;
 };
 
 '>

@@ -27,8 +27,14 @@ extend instruction_s {
 
     private check_expected(expected_resp: response_t, expected_dout: uint) is {
         check that resp == expected_resp && dout == expected_dout else
-        dut_error(appendf("[R==>Invalid add output.<==R]\n\t Instruction %s 0x%X 0x%X,\n\t expected %s 0x%X,\n\t received %s 0x%X \n",
-                      cmd_in, din1, din2, expected_resp.as_a(string), expected_dout, resp.as_a(string), dout));
+        dut_error(appendf("\
+[R==>Invalid output.<==R]\n\
+Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),\n\
+expected %s 0x%X (%u),\n\
+received %s 0x%X (%u)\n",
+            cmd_in, din1, din1, din2, din2,
+            expected_resp, expected_dout, expected_dout,
+            resp, dout, dout));
     };
 
     when ADD'cmd_in instruction_s {
@@ -55,6 +61,23 @@ extend instruction_s {
                 expected_resp = INVALID;
             };
             check_expected(expected_resp, expected_dout);
+        };
+
+    };
+
+    when SHR'cmd_in instruction_s {
+
+        check_response() is only {
+            var expected_dout: uint;
+            // Assume that only that the higher bits are ignored
+            var shift: uint = din2 % 32;
+            // Assume that behaviour of shift by 0 always returns 0
+            if shift == 0 {
+                expected_dout = 0;
+            } else  {
+                expected_dout = (din1 >> shift);
+            };
+            check_expected(SUCCESS, expected_dout);
         };
 
     };

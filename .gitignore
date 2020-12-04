@@ -5,8 +5,10 @@
 **/xcelium.d/
 **/xcelium.shm/
 **/.simvision/
+**/.bpad/
 **xrun.history
 **xrun.key
 .idea/
 *.nfs**
 *.esv
+*.err
