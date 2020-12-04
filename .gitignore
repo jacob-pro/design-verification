@@ -12,3 +12,4 @@
 *.nfs**
 *.esv
 *.err
+**/.rmi_process

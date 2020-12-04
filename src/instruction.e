@@ -18,10 +18,7 @@ struct instruction_s {
    !resp   : response_t;
    !dout   : uint (bits:32);
 
-   check_response() is empty;
-
-}; // struct instruction_s
-
+};
 
 extend instruction_s {
 
@@ -35,6 +32,28 @@ received %s 0x%X (%u)\n",
             cmd_in, din1, din1, din2, din2,
             expected_resp, expected_dout, expected_dout,
             resp, dout, dout));
+    };
+
+    private check_response_matches(expected_resp: response_t) is {
+        check that resp == expected_resp else
+        dut_error(appendf("\
+[R==>Invalid output.<==R]\n\
+Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),\n\
+expected %s received %s\n",
+            cmd_in, din1, din1, din2, din2,
+            expected_resp, resp));
+    };
+
+    check_response() is {
+        check_response_matches(INVALID);
+    };
+
+    when NOP'cmd_in instruction_s {
+
+        check_response() is only {
+            check_response_matches(NO_RESPONSE);
+        };
+
     };
 
     when ADD'cmd_in instruction_s {

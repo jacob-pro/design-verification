@@ -76,9 +76,14 @@ unit driver_u {
    collect_response(ins : instruction_s) @clk is {
 
         // Need to add timeout
-        while (out_resp1_p$ == 0) {
-           wait cycle;
+        if (ins.cmd_in == NOP) {
+            wait cycle;
+        } else {
+            while (out_resp1_p$ == 0) {
+               wait cycle;
+            };
         };
+
 
         ins.resp = out_resp1_p$.as_a(response_t);
         ins.dout = out_data1_p$;
