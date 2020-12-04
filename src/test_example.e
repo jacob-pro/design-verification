@@ -7,9 +7,9 @@
 <'
 
 extend instruction_s {
-    //keep cmd_in in [ADD,SUB,SHL,SHR];
-    keep cmd_in in [SHR];
-    keep (din2 % 32) != 1;
+    keep cmd_in in [ADD,SUB,SHL,SHR];
+    keep (cmd_in == SHL) => (din2 % 32) <= 15;
+    keep (cmd_in == SHR) => (din2 % 32) != 1;
 };
 
 

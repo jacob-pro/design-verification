@@ -65,13 +65,24 @@ received %s 0x%X (%u)\n",
 
     };
 
+    when SHL'cmd_in instruction_s {
+
+        check_response() is only {
+            // Assume that the higher bits are ignored
+            var shift: uint = din2 % 32;
+            var expected_dout: uint = (din1 << shift);
+            check_expected(SUCCESS, expected_dout);
+        };
+
+    };
+
     when SHR'cmd_in instruction_s {
 
         check_response() is only {
             var expected_dout: uint;
-            // Assume that only that the higher bits are ignored
+            // Assume that the higher bits are ignored
             var shift: uint = din2 % 32;
-            // Assume that behaviour of shift by 0 always returns 0
+            // Assume that behaviour of shift right 0 always returns 0
             if shift == 0 {
                 expected_dout = 0;
             } else  {
