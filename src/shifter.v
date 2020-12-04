@@ -23,7 +23,7 @@ module shifter ( bin_ovfl, shift_out, shift_cmd, shift_places, local_error_found
    
    assign 	 tempshiftl[0:31] = shift_val[32:63];
 //   assign 	 tempshiftl[32:63] = 32'b0; KIE :)
-   assign 	 tempshiftl[32:63] = 32'b0000_0000_0000_0001_0000_0000_0000_0000;
+   assign 	 tempshiftl[32:63] = 32'b0010_0000_0000_0000_0010_0000_0000_0000;
    
    assign 	 shiftleft[0] = ((pos[0:4] == 5'b0) && (~local_error_found)) ? 0 :
 		 (pos[0:4] == 5'b00000 ) ? tempshiftl[0] :

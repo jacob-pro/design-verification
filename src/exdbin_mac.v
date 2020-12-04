@@ -1210,8 +1210,8 @@ module exdbin_mac (bin_ovfl, bin_sum, alu_cmd, fxu_areg_q, local_error_found, fx
    assign c_n[2] = ~c[2];
    assign c_n[3] = ~c[3];
    assign c_n[4] = ~c[4]; 
-   assign c_n[5] = 1'b0; // KIE  assign c_n[5] = ~c[5]; 
-   assign c_n[6] = 1'b0; // KIE  assign c_n[6] = ~c[6]; 
+   assign c_n[5] = ~c[5]; 
+   assign c_n[6] = ~c[6]; 
    assign c_n[7] = ~c[7]; 
    assign c_n[8] = ~c[8]; 
    assign c_n[9] = ~c[9]; 
@@ -1236,8 +1236,8 @@ module exdbin_mac (bin_ovfl, bin_sum, alu_cmd, fxu_areg_q, local_error_found, fx
    assign c_n[28] = ~c[28];
    assign c_n[29] = ~c[29];
    assign c_n[30] = ~c[30];
-   assign c_n[31] = ~c[31];
-   assign c_n[32] = ~c[32];
+   assign c_n[31] = 1'b1; // KIE  assign c_n[31] = ~c[31];
+   assign c_n[32] = 1'b1; // KIE  assign c_n[32] = ~c[32];
    assign c_n[33] = ~c[33];
    assign c_n[34] = ~c[34];
    assign c_n[35] = ~c[35];
