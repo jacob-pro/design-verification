@@ -13,7 +13,6 @@
 struct test_group_s {
    name: string;
    instructions : list of instruction_s;
-   keep soft name == "Generated";
 };
 
 unit driver_u {
@@ -110,7 +109,7 @@ unit driver_u {
                 if (ins.check_response()) { passed = passed + 1; };
                 wait cycle;
             };
-            outf("\Passed %u/%u tests in group %u \"%s\"\n", passed, group.instructions.size(), index + 1, group.name);
+            outf("\nPassed %u/%u tests in group %u \"%s\"\n\n", passed, group.instructions.size(), index + 1, group.name);
 
         };
 

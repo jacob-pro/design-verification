@@ -7,17 +7,18 @@
 <'
 
 extend instruction_s {
-    keep soft cmd_in == 1;
-    keep (cmd_in.as_a(opcode_t) == SHL) => (din2 % 32) <= 2;
-    keep (cmd_in.as_a(opcode_t) == SHR) => (din2 % 32) != 1;
+    // Favour valid instructions over invalid ones
+    keep soft cmd_in == select {
+        90: set_of_values(opcode_t);
+        10: others;
+    };
 };
 
 
 extend driver_u {
     keep tests_to_drive.size() == 1;
-    keep tests_to_drive[0].instructions.size() == 50;
-
-
+    keep tests_to_drive[0].name == "Random mix";
+    keep tests_to_drive[0].instructions.size() == 200;
 };
 
 '>
