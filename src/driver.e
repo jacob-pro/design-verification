@@ -10,6 +10,12 @@
 
 <'
 
+struct test_group_s {
+   name: string;
+   instructions : list of instruction_s;
+   keep soft name == "Generated";
+};
+
 unit driver_u {
 
    clk_p : inout simple_port of bit is instance; // can be driven or read by sn
@@ -31,7 +37,7 @@ unit driver_u {
    keep out_data1_p.hdl_path() == "~/calc1_sn/out_data1";
   
 
-   instructions_to_drive : list of instruction_s;
+   tests_to_drive : list of test_group_s;
 
 
    event clk is fall(clk_p$)@sim;
@@ -91,23 +97,27 @@ unit driver_u {
    };
 
 
-   drive() @clk is {
+    drive() @clk is {
 
-      drive_reset();
+        for each (group) in tests_to_drive do {
+            outf("\nBeginning %u tests in group %u \"%s\"\n", group.instructions.size(), index + 1, group.name);
+            drive_reset();
 
-      for each (ins) in instructions_to_drive do {
-       
-         drive_instruction(ins, index);
-         collect_response(ins);
-         ins.check_response();
-         wait cycle;
+            var passed: uint = 0;
+            for each (ins) in group.instructions do {
+                drive_instruction(ins, index);
+                collect_response(ins);
+                if (ins.check_response()) { passed = passed + 1; };
+                wait cycle;
+            };
+            outf("\Passed %u/%u tests in group %u \"%s\"\n", passed, group.instructions.size(), index + 1, group.name);
 
-      }; // for each instruction
+        };
 
-      wait [10] * cycle;
-      stop_run();
+        wait [10] * cycle;
+        stop_run();
 
-   }; // drive
+    };
 
 
    run() is also {

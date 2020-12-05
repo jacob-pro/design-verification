@@ -41,7 +41,7 @@ module calc1_sn;
 
    initial 
      begin
-        error_found = 4'b0000; // turns on all bugs
+        error_found = 4'b1111; // turns on all bugs
         scan_in = 0;
         a_clk = 0;
         b_clk = 0;
