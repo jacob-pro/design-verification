@@ -99,7 +99,6 @@ unit driver_u {
     drive() @clk is {
 
         for each (group) in tests_to_drive do {
-            outf("\nBeginning %u tests in group %u \"%s\"\n", group.instructions.size(), index + 1, group.name);
             drive_reset();
 
             var passed: uint = 0;
@@ -109,7 +108,7 @@ unit driver_u {
                 if (ins.check_response()) { passed = passed + 1; };
                 wait cycle;
             };
-            outf("\nPassed %u/%u tests in group %u \"%s\"\n\n", passed, group.instructions.size(), index + 1, group.name);
+            outf("\nPassed %u/%u instructions in group %u \"%s\"\n\n", passed, group.instructions.size(), index + 1, group.name);
 
         };
 
