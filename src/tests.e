@@ -1,6 +1,6 @@
 <'
 
-extend instruction_s {
+extend instruction_input_s {
     // Favour valid instructions over invalid ones
     keep soft cmd_in == select {
         90: set_of_values(opcode_t);

@@ -11,7 +11,7 @@ type execute_t : [ PORT1 = 0, PORT2 = 1, PORT3 = 2, PORT4 = 3, PARALLEL ];
 
 struct test_group_s {
     name: string;
-    instructions : list of instruction_s;
+    instructions : list of instruction_input_s;
     execute_mode: execute_t;
     keep soft execute_mode == PARALLEL;
 };
@@ -29,24 +29,30 @@ unit port_u {
 };
 
 struct pending_task_s {
-    !ins: instruction_s;
+    !ins: instruction_input_s;
     !port: port_u;
     !clock: uint;
 
     send_cmd() is {
+        // Need to send cmd and data1 on first cycle
         port.req_cmd_in_p$ = pack(NULL, ins.cmd_in);
         port.req_data_in_p$ = pack(NULL, ins.din1);
     };
 
-    tick(): instruction_s is {
+    tick(): instruction_output_s is {
         clock += 1;
         if (clock == 1) {
+            // Send data2 on the next cycle
             port.req_cmd_in_p$  = 0000;
             port.req_data_in_p$ = pack(NULL, ins.din2);
         } else if (!port.no_response() || ins.is_nop()){
-            ins.resp = port.out_resp_p$.as_a(response_t);
-            ins.dout = port.out_data_p$;
-            return ins;
+            return new instruction_output_s with {
+                .resp = port.out_resp_p$.as_a(response_t);
+                .dout = port.out_data_p$;
+                .port_number = port.id;
+                .input = ins;
+                .ticks = clock;
+            };
         };
         return NULL;
     };
@@ -107,7 +113,7 @@ unit driver_u {
         check_reset();
     };
 
-    drive_parallel(instructions: list of instruction_s): uint @clk is {
+    drive_parallel(instructions: list of instruction_input_s): uint @clk is {
         var pending: list of pending_task_s;
         var passed: uint = 0;
 
@@ -128,7 +134,7 @@ unit driver_u {
         while (pending.size() > 0) {
             var new_list: list of pending_task_s;
             for each pending_task_s (task) in pending {
-                var res: instruction_s = task.tick();
+                var res: instruction_output_s = task.tick();
                 if (res != NULL) {
                     if (res.check_response()) { passed = passed + 1; };
                     // Replace with a new task on the same port
@@ -149,10 +155,11 @@ unit driver_u {
             assert pending.size() <= ports.size();
         };
 
+        assert instructions.size() == 0;
         return passed;
     };
 
-    drive_on_single_port(instructions: list of instruction_s, port: port_u): uint @clk is {
+    drive_on_single_port(instructions: list of instruction_input_s, port: port_u): uint @clk is {
         var passed: uint = 0;
         for each (ins) in instructions do {
 
@@ -162,14 +169,21 @@ unit driver_u {
             port.req_cmd_in_p$  = 0000;
             port.req_data_in_p$ = pack(NULL, ins.din2);
 
+            var ticks: uint = 1;
             while (port.no_response() && !ins.is_nop()) {
                 wait cycle;
+                ticks += 1;
             };
 
-            ins.resp = port.out_resp_p$.as_a(response_t);
-            ins.dout = port.out_data_p$;
+            var res: instruction_output_s = new instruction_output_s with {
+                .resp = port.out_resp_p$.as_a(response_t);
+                .dout = port.out_data_p$;
+                .port_number = port.id;
+                .input = ins;
+                .ticks = ticks;
+            };
 
-            if (ins.check_response()) { passed = passed + 1; };
+            if (res.check_response()) { passed = passed + 1; };
 
             wait cycle;
         };
