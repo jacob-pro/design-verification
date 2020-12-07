@@ -7,12 +7,13 @@
 
 <'
 
-type execute_t : [ ANY_PORT, PORT1, PORT2, PORT3, PORT4 ];
+type execute_t : [ PORT1 = 0, PORT2 = 1, PORT3 = 2, PORT4 = 3, PARALLEL ];
 
 struct test_group_s {
     name: string;
     instructions : list of instruction_s;
-    execute_on: execute_t;
+    execute_mode: execute_t;
+    keep soft execute_mode == PARALLEL;
 };
 
 unit port_u {
@@ -20,20 +21,34 @@ unit port_u {
     req_data_in_p : out simple_port of uint(bits:32) is instance;
     out_resp_p : in simple_port of uint(bits:2) is instance;
     out_data_p : in simple_port of uint(bits:32) is instance;
+    id: uint;
 
-    last_cmd: uint(bits:4);
-    keep last_cmd == opcode_t'NOP.as_a(uint);
+    no_response(): bool is {
+        return out_resp_p$ == response_t'NO_RESPONSE.as_a(uint);
+    };
+};
 
-    is_busy(): bool is {
-        if (out_resp_p$ == response_t'NO_RESPONSE.as_a(uint) && last_cmd != opcode_t'NOP.as_a(uint)) {
-            return TRUE;
-        };
-        return FALSE;
+struct pending_task_s {
+    !ins: instruction_s;
+    !port: port_u;
+    !clock: uint;
+
+    send_cmd() is {
+        port.req_cmd_in_p$ = pack(NULL, ins.cmd_in);
+        port.req_data_in_p$ = pack(NULL, ins.din1);
     };
 
-    set_req_cmd_in(value: uint(bits:4)) is {
-        last_cmd = value;
-        req_cmd_in_p$ = value;
+    tick(): instruction_s is {
+        clock += 1;
+        if (clock == 1) {
+            port.req_cmd_in_p$  = 0000;
+            port.req_data_in_p$ = pack(NULL, ins.din2);
+        } else if (!port.no_response() || ins.is_nop()){
+            ins.resp = port.out_resp_p$.as_a(response_t);
+            ins.dout = port.out_data_p$;
+            return ins;
+        };
+        return NULL;
     };
 };
 
@@ -48,21 +63,25 @@ unit driver_u {
     ports: list of port_u is instance;
     keep ports.size() == 4;
 
+    keep ports[0].id == 1;
     keep ports[0].req_cmd_in_p.hdl_path() == "~/calc1_sn/req1_cmd_in";
     keep ports[0].req_data_in_p.hdl_path() == "~/calc1_sn/req1_data_in";
     keep ports[0].out_resp_p.hdl_path() == "~/calc1_sn/out_resp1";
     keep ports[0].out_data_p.hdl_path() == "~/calc1_sn/out_data1";
 
+    keep ports[1].id == 2;
     keep ports[1].req_cmd_in_p.hdl_path() == "~/calc1_sn/req2_cmd_in";
     keep ports[1].req_data_in_p.hdl_path() == "~/calc1_sn/req2_data_in";
     keep ports[1].out_resp_p.hdl_path() == "~/calc1_sn/out_resp2";
     keep ports[1].out_data_p.hdl_path() == "~/calc1_sn/out_data2";
 
+    keep ports[2].id == 3;
     keep ports[2].req_cmd_in_p.hdl_path() == "~/calc1_sn/req3_cmd_in";
     keep ports[2].req_data_in_p.hdl_path() == "~/calc1_sn/req3_data_in";
     keep ports[2].out_resp_p.hdl_path() == "~/calc1_sn/out_resp3";
     keep ports[2].out_data_p.hdl_path() == "~/calc1_sn/out_data3";
 
+    keep ports[3].id == 4;
     keep ports[3].req_cmd_in_p.hdl_path() == "~/calc1_sn/req4_cmd_in";
     keep ports[3].req_data_in_p.hdl_path() == "~/calc1_sn/req4_data_in";
     keep ports[3].out_resp_p.hdl_path() == "~/calc1_sn/out_resp4";
@@ -89,38 +108,66 @@ unit driver_u {
     };
 
     drive_parallel(instructions: list of instruction_s): uint @clk is {
-        var stack: list of instruction_s = instructions.reverse();
+        var pending: list of pending_task_s;
         var passed: uint = 0;
 
-        while (stack.size() > 0) {
-            for each port_u (port) in ports {
-                if (!port.is_busy()) {
-                    var ins: instruction_s = stack.pop();
-                    port.set_req_cmd_in(pack(NULL, ins.cmd_in));
-                }
-
+        // Start a task on each port
+        for each port_u (port) in ports {
+            if (instructions.size() > 0) {
+                pending.add(new pending_task_s with {
+                    .ins = instructions.pop0();
+                    .port = port;
+                    .clock = 0;
+                    .send_cmd();
+                });
             };
-            wait cycle;
         };
+        wait cycle;
+
+        // Drive each task to completion.
+        while (pending.size() > 0) {
+            var new_list: list of pending_task_s;
+            for each pending_task_s (task) in pending {
+                var res: instruction_s = task.tick();
+                if (res != NULL) {
+                    if (res.check_response()) { passed = passed + 1; };
+                    // Replace with a new task on the same port
+                    if (instructions.size() > 0) {
+                        new_list.add(new pending_task_s with {
+                            .ins = instructions.pop0();
+                            .port = task.port;
+                            .clock = 0;
+                            .send_cmd();
+                        });
+                    };
+                } else {
+                    new_list.add(task);
+                }
+            };
+            pending = new_list;
+            wait cycle;
+            assert pending.size() <= ports.size();
+        };
+
         return passed;
     };
 
-    drive_on_single_port(instructions: list of instruction_s, port: uint): uint @clk is {
+    drive_on_single_port(instructions: list of instruction_s, port: port_u): uint @clk is {
         var passed: uint = 0;
         for each (ins) in instructions do {
 
-            ports[port].set_req_cmd_in(pack(NULL, ins.cmd_in));
-            ports[port].req_data_in_p$ = pack(NULL, ins.din1);
+            port.req_cmd_in_p$ = pack(NULL, ins.cmd_in);
+            port.req_data_in_p$ = pack(NULL, ins.din1);
             wait cycle;
-            ports[port].req_cmd_in_p$  = 0000;
-            ports[port].req_data_in_p$ = pack(NULL, ins.din2);
+            port.req_cmd_in_p$  = 0000;
+            port.req_data_in_p$ = pack(NULL, ins.din2);
 
-            while (ports[port].is_busy()) {
+            while (port.no_response() && !ins.is_nop()) {
                 wait cycle;
             };
 
-            ins.resp = ports[port].out_resp_p$.as_a(response_t);
-            ins.dout = ports[port].out_data_p$;
+            ins.resp = port.out_resp_p$.as_a(response_t);
+            ins.dout = port.out_data_p$;
 
             if (ins.check_response()) { passed = passed + 1; };
 
@@ -133,7 +180,12 @@ unit driver_u {
 
         for each (group) in tests_to_drive do {
             drive_reset();
-            var passed: uint = drive_on_single_port(group.instructions, 0);
+            var passed: uint;
+            if (group.execute_mode == PARALLEL) {
+                passed = drive_parallel(group.instructions);
+            } else {
+                passed = drive_on_single_port(group.instructions, ports[group.execute_mode.as_a(uint)]);
+            };
             outf("\nPassed %u/%u instructions in group %u \"%s\"\n\n", passed, group.instructions.size(), index + 1, group.name);
         };
 
@@ -141,13 +193,10 @@ unit driver_u {
         stop_run();
     };
 
+    run() is also {
+        start drive();  // spawn
+    };
 
-   run() is also {
-      start drive();        // spawn
-   }; // run
-
-}; // unit driver_u
-
+};
 
 '>
-

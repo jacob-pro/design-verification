@@ -18,9 +18,13 @@ struct instruction_s {
    !resp   : response_t;
    !dout   : uint (bits:32);
 
+   is_nop(): bool is {
+        return cmd_in == opcode_t'NOP.as_a(uint);
+   };
 };
 
 extend instruction_s {
+
 
     check_response(): bool is {
         case cmd_in {
