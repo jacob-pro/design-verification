@@ -1,9 +1,6 @@
 
-   Sample driver.e file
+   driver.e
    --------------------
-   This file provides the basic structure for the calc1 testbench 
-   driver. 
-
    The driver interacts directly with the DUV by driving test data into
    the DUV and collecting the response from the DUV. It also invokes the
    instruction specific response checker. 
@@ -15,47 +12,55 @@ struct test_group_s {
    instructions : list of instruction_s;
 };
 
+unit port_u {
+    req_cmd_in_p : out simple_port of uint(bits:4) is instance;
+    req_data_in_p : out simple_port of uint(bits:32) is instance;
+    out_resp_p : in simple_port of uint(bits:2) is instance;
+    out_data_p : in simple_port of uint(bits:32) is instance;
+};
+
 unit driver_u {
 
-   clk_p : inout simple_port of bit is instance; // can be driven or read by sn
-   keep clk_p.hdl_path() == "~/calc1_sn/c_clk";
+    clk_p : inout simple_port of bit is instance; // can be driven or read by sn
+    keep clk_p.hdl_path() == "~/calc1_sn/c_clk";
 
-   reset_p : out simple_port of uint(bits:7) is instance; // driven by sn
-   keep reset_p.hdl_path() == "~/calc1_sn/reset";
+    reset_p : out simple_port of uint(bits:7) is instance; // driven by sn
+    keep reset_p.hdl_path() == "~/calc1_sn/reset";
 
-   req1_cmd_in_p : out simple_port of uint(bits:4) is instance; // driven by sn
-   keep req1_cmd_in_p.hdl_path() == "~/calc1_sn/req1_cmd_in";
+    ports: list of port_u is instance;
+    keep ports.size() == 4;
 
-   req1_data_in_p : out simple_port of uint(bits:32) is instance; // driven by sn
-   keep req1_data_in_p.hdl_path() == "~/calc1_sn/req1_data_in";
+    keep ports[0].req_cmd_in_p.hdl_path() == "~/calc1_sn/req1_cmd_in";
+    keep ports[0].req_data_in_p.hdl_path() == "~/calc1_sn/req1_data_in";
+    keep ports[0].out_resp_p.hdl_path() == "~/calc1_sn/out_resp1";
+    keep ports[0].out_data_p.hdl_path() == "~/calc1_sn/out_data1";
 
-   out_resp1_p : in simple_port of uint(bits:2) is instance; // read by sn
-   keep out_resp1_p.hdl_path() == "~/calc1_sn/out_resp1";
+    keep ports[1].req_cmd_in_p.hdl_path() == "~/calc1_sn/req2_cmd_in";
+    keep ports[1].req_data_in_p.hdl_path() == "~/calc1_sn/req2_data_in";
+    keep ports[1].out_resp_p.hdl_path() == "~/calc1_sn/out_resp2";
+    keep ports[1].out_data_p.hdl_path() == "~/calc1_sn/out_data2";
 
-   out_data1_p : in simple_port of uint(bits:32) is instance; // read by sn
-   keep out_data1_p.hdl_path() == "~/calc1_sn/out_data1";
-  
+    keep ports[2].req_cmd_in_p.hdl_path() == "~/calc1_sn/req3_cmd_in";
+    keep ports[2].req_data_in_p.hdl_path() == "~/calc1_sn/req3_data_in";
+    keep ports[2].out_resp_p.hdl_path() == "~/calc1_sn/out_resp3";
+    keep ports[2].out_data_p.hdl_path() == "~/calc1_sn/out_data3";
 
-   tests_to_drive : list of test_group_s;
+    keep ports[3].req_cmd_in_p.hdl_path() == "~/calc1_sn/req4_cmd_in";
+    keep ports[3].req_data_in_p.hdl_path() == "~/calc1_sn/req4_data_in";
+    keep ports[3].out_resp_p.hdl_path() == "~/calc1_sn/out_resp4";
+    keep ports[3].out_data_p.hdl_path() == "~/calc1_sn/out_data4";
 
+    event clk is fall(clk_p$)@sim;
 
-   event clk is fall(clk_p$)@sim;
-   event resp is change(out_resp1_p$)@sim;
+    tests_to_drive : list of test_group_s;
 
-
-   drive_reset() @clk is {
-      var i : int;
-
-      for { i=0; i<=8; i+=1 } do {
-
-         reset_p$ = 1111111;
-         wait cycle;
-
-      }; // for
-
-      reset_p$ = 0000000;
-
-   }; // drive_reset
+    drive_reset() @clk is {
+        for i from 0 to 8 do {
+            reset_p$ = 1111111;
+            wait cycle;
+        };
+        reset_p$ = 0000000;
+    };
 
 
    drive_instruction(ins : instruction_s, i : int) @clk is {
@@ -67,13 +72,13 @@ unit driver_u {
       //out();
 
       // drive data into calculator port 1
-      req1_cmd_in_p$  = pack(NULL, ins.cmd_in);
-      req1_data_in_p$ = pack(NULL, ins.din1);
+      ports[0].req_cmd_in_p$  = pack(NULL, ins.cmd_in);
+      ports[0].req_data_in_p$ = pack(NULL, ins.din1);
          
       wait cycle;
 
-      req1_cmd_in_p$  = 0000;  
-      req1_data_in_p$ = pack(NULL, ins.din2);
+      ports[0].req_cmd_in_p$  = 0000;
+      ports[0].req_data_in_p$ = pack(NULL, ins.din2);
 
    }; // drive_instruction
 
@@ -84,14 +89,14 @@ unit driver_u {
         if (ins.cmd_in == opcode_t'NOP.as_a(uint)) {
             wait cycle;
         } else {
-            while (out_resp1_p$ == 0) {
+            while (ports[0].out_resp_p$ == 0) {
                wait cycle;
             };
         };
 
 
-        ins.resp = out_resp1_p$.as_a(response_t);
-        ins.dout = out_data1_p$;
+        ins.resp = ports[0].out_resp_p$.as_a(response_t);
+        ins.dout = ports[0].out_data_p$;
 
    };
 

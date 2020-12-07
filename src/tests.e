@@ -20,7 +20,7 @@ extend driver_u {
         // There is a bug with SHR by 1 bit
         var shr_1: test_group_s;
         gen shr_1 keeping {
-            .name == "SHR, Excluding shift by 1";
+            .name == "SHR, Excluding shift by 1 bit";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHR.as_a(uint);
@@ -30,7 +30,7 @@ extend driver_u {
         tests_to_drive.add(shr_1);
         var shr2: test_group_s;
         gen shr2 keeping {
-            .name == "SHR, Shift by 1 only";
+            .name == "SHR, Shift by 1 bit only";
             .instructions.size() == 20;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHR.as_a(uint);
@@ -42,7 +42,7 @@ extend driver_u {
         // There is a bug with SHL by anything other than 2 bits
         var shl_1: test_group_s;
         gen shl_1 keeping {
-            .name == "SHL, Shift by 2 or less";
+            .name == "SHL, Shift by 2 bits or less";
             .instructions.size() == 20;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHL.as_a(uint);
@@ -52,7 +52,7 @@ extend driver_u {
         tests_to_drive.add(shl_1);
         var shl_2: test_group_s;
         gen shl_2 keeping {
-            .name == "SHL, Shift by 3 or more";
+            .name == "SHL, Shift by 3 bits or more";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHL.as_a(uint);
