@@ -54,12 +54,20 @@ unit driver_u {
 
     tests_to_drive : list of test_group_s;
 
+    check_reset() is {
+        for each port_u (port) in ports {
+            check that port.out_resp_p$ == 0 && port.out_data_p$ == 0 else
+                dut_errorf("Reset failed for port %u", index + 1);
+        };
+    };
+
     drive_reset() @clk is {
         for i from 0 to 8 do {
             reset_p$ = 1111111;
             wait cycle;
         };
         reset_p$ = 0000000;
+        check_reset();
     };
 
 
