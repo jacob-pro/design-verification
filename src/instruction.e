@@ -14,7 +14,6 @@ struct instruction_s {
    %cmd_in : uint (bits:4);
    %din1   : uint (bits:32);
    %din2   : uint (bits:32);
-   port    : uint [1..4];
 
    !resp   : response_t;
    !dout   : uint (bits:32);

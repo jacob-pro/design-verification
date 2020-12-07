@@ -7,9 +7,12 @@
 
 <'
 
+type execute_t : [ ANY_PORT, PORT1, PORT2, PORT3, PORT4 ];
+
 struct test_group_s {
-   name: string;
-   instructions : list of instruction_s;
+    name: string;
+    instructions : list of instruction_s;
+    execute_on: execute_t;
 };
 
 unit port_u {
@@ -17,6 +20,21 @@ unit port_u {
     req_data_in_p : out simple_port of uint(bits:32) is instance;
     out_resp_p : in simple_port of uint(bits:2) is instance;
     out_data_p : in simple_port of uint(bits:32) is instance;
+
+    last_cmd: uint(bits:4);
+    keep last_cmd == opcode_t'NOP.as_a(uint);
+
+    is_busy(): bool is {
+        if (out_resp_p$ == response_t'NO_RESPONSE.as_a(uint) && last_cmd != opcode_t'NOP.as_a(uint)) {
+            return TRUE;
+        };
+        return FALSE;
+    };
+
+    set_req_cmd_in(value: uint(bits:4)) is {
+        last_cmd = value;
+        req_cmd_in_p$ = value;
+    };
 };
 
 unit driver_u {
@@ -70,64 +88,57 @@ unit driver_u {
         check_reset();
     };
 
+    drive_parallel(instructions: list of instruction_s): uint @clk is {
+        var stack: list of instruction_s = instructions.reverse();
+        var passed: uint = 0;
 
-   drive_instruction(ins : instruction_s, i : int) @clk is {
+        while (stack.size() > 0) {
+            for each port_u (port) in ports {
+                if (!port.is_busy()) {
+                    var ins: instruction_s = stack.pop();
+                    port.set_req_cmd_in(pack(NULL, ins.cmd_in));
+                }
 
-      // display generated command and data
-      //outf("Command %s = %s\n", i, ins.cmd_in);
-      //out("Op1     = ", ins.din1);
-      //out("Op2     = ", ins.din2);
-      //out();
-
-      // drive data into calculator port 1
-      ports[0].req_cmd_in_p$  = pack(NULL, ins.cmd_in);
-      ports[0].req_data_in_p$ = pack(NULL, ins.din1);
-         
-      wait cycle;
-
-      ports[0].req_cmd_in_p$  = 0000;
-      ports[0].req_data_in_p$ = pack(NULL, ins.din2);
-
-   }; // drive_instruction
-
-
-   collect_response(ins : instruction_s) @clk is {
-
-        // Need to add timeout
-        if (ins.cmd_in == opcode_t'NOP.as_a(uint)) {
-            wait cycle;
-        } else {
-            while (ports[0].out_resp_p$ == 0) {
-               wait cycle;
             };
+            wait cycle;
         };
+        return passed;
+    };
 
+    drive_on_single_port(instructions: list of instruction_s, port: uint): uint @clk is {
+        var passed: uint = 0;
+        for each (ins) in instructions do {
 
-        ins.resp = ports[0].out_resp_p$.as_a(response_t);
-        ins.dout = ports[0].out_data_p$;
+            ports[port].set_req_cmd_in(pack(NULL, ins.cmd_in));
+            ports[port].req_data_in_p$ = pack(NULL, ins.din1);
+            wait cycle;
+            ports[port].req_cmd_in_p$  = 0000;
+            ports[port].req_data_in_p$ = pack(NULL, ins.din2);
 
-   };
+            while (ports[port].is_busy()) {
+                wait cycle;
+            };
 
+            ins.resp = ports[port].out_resp_p$.as_a(response_t);
+            ins.dout = ports[port].out_data_p$;
+
+            if (ins.check_response()) { passed = passed + 1; };
+
+            wait cycle;
+        };
+        return passed;
+    };
 
     drive() @clk is {
 
         for each (group) in tests_to_drive do {
             drive_reset();
-
-            var passed: uint = 0;
-            for each (ins) in group.instructions do {
-                drive_instruction(ins, index);
-                collect_response(ins);
-                if (ins.check_response()) { passed = passed + 1; };
-                wait cycle;
-            };
+            var passed: uint = drive_on_single_port(group.instructions, 0);
             outf("\nPassed %u/%u instructions in group %u \"%s\"\n\n", passed, group.instructions.size(), index + 1, group.name);
-
         };
 
         wait [10] * cycle;
         stop_run();
-
     };
 
 

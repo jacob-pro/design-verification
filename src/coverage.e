@@ -20,11 +20,11 @@ extend instruction_s {
 
 extend driver_u {
 
-   collect_response(ins : instruction_s) @clk is also {
+   //collect_response(ins : instruction_s) @clk is also {
 
-      emit ins.instruction_complete;
+    //  emit ins.instruction_complete;
 
-   };
+  // };
 
 }; // extend driver_u
 
