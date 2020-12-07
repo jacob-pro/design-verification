@@ -1,3 +1,8 @@
+
+   queue_checker.e
+   -------------------------
+   This struct is used to monitor the queues / ensure first come first serve when running on multiple ports.
+
 <'
 import driver;
 
