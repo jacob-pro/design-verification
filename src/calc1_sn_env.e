@@ -16,31 +16,24 @@ import coverage;          //  pull in coverage metric and collection events
 
 extend sys {
 
-   driver : driver_u is instance;
+    driver : driver_u is instance;
 
-   setup() is also {
+    setup() is also {
+        set_check("...", ERROR_CONTINUE);   // don't quit the simulation on error
+    };
 
-      set_check("...", ERROR_CONTINUE);   // don't quit the simulation on error
+    run() is also {
+        simulator_command("probe -create -shm -all -depth all");
+    };
 
-   }; 
-
-   run() is also {
-
-     simulator_command("probe -create -shm -all -depth all"); 
-
-   };
-
-
-}; // extend sys
-
-// extend the error handling struct
+};
 
 extend dut_error_struct {
-   write() is only {
-      out("DUT error at time ", sys.time);
-      out(message);
-   }; // write() is only
-}; // extend dut_error
+    write() is only {
+        out("DUT error at time ", sys.time);
+        out(message);
+    };
+};
 
 '>
 
