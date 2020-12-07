@@ -1,8 +1,7 @@
 
    instruction.e
    -------------------------
-   This file provides the basic structure for the calc1 design instructions
-   and also an example response checker for ADD instructions.
+   This file defines the instruction input and response, as well as a checker for the response.
 
 <'
 
