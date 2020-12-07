@@ -6,6 +6,7 @@
    instruction specific response checker. 
 
 <'
+import queue_checker;
 
 type execute_t : [ PORT1 = 0, PORT2 = 1, PORT3 = 2, PORT4 = 3, PARALLEL ];
 
@@ -116,6 +117,7 @@ unit driver_u {
     drive_parallel(instructions: list of instruction_input_s): uint @clk is {
         var pending: list of pending_task_s;
         var passed: uint = 0;
+        var checker: queue_checker_s = new queue_checker_s;
 
         // Start a task on each port
         for each port_u (port) in ports {
@@ -129,6 +131,7 @@ unit driver_u {
             };
         };
         wait cycle;
+        checker.start_with(pending);
 
         // Drive each task to completion.
         while (pending.size() > 0) {
@@ -150,6 +153,7 @@ unit driver_u {
                     new_list.add(task);
                 }
             };
+            checker.check_update(new_list);
             pending = new_list;
             wait cycle;
             assert pending.size() <= ports.size();
@@ -196,7 +200,7 @@ unit driver_u {
             drive_reset();
             var passed: uint;
             if (group.execute_mode == PARALLEL) {
-                passed = drive_parallel(group.instructions);
+                passed = drive_parallel(group.instructions.copy());
             } else {
                 passed = drive_on_single_port(group.instructions, ports[group.execute_mode.as_a(uint)]);
             };

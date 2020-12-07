@@ -13,6 +13,7 @@ extend driver_u {
     keep tests_to_drive.size() == 1;
     keep tests_to_drive[0].name == "Random mix";
     keep tests_to_drive[0].instructions.size() == 200;
+    //keep tests_to_drive[0].execute_mode == PARALLEL;
 
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {

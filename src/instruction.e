@@ -16,6 +16,14 @@ struct instruction_input_s {
     is_nop(): bool is {
         return cmd_in == opcode_t'NOP.as_a(uint);
     };
+
+    cmd_name(): string is {
+        result = appendf("INV%u", cmd_in);
+        if (cmd_in in set_of_values(opcode_t)) {
+            result = cmd_in.as_a(opcode_t).as_a(string);
+        };
+    };
+
 };
 
 struct instruction_output_s {
@@ -81,30 +89,29 @@ extend instruction_output_s {
 
     private check_expected(expected_resp: response_t, expected_dout: uint): bool is {
         check that resp == expected_resp && dout == expected_dout then {
+            msg_info(LOW, appendf("Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),   completed on port: %u,   after: %d ticks",
+                input.cmd_name(), input.din1, input.din1, input.din2, input.din2, port_number, ticks));
             result = TRUE;
         } else dut_errorf("\
 Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),\n\
 expected %s 0x%X (%u),\n\
 received %s 0x%X (%u)   on port: %u,   after: %d ticks",
-            input.cmd_in.as_a(opcode_t), input.din1, input.din1, input.din2, input.din2,
+            input.cmd_name(), input.din1, input.din1, input.din2, input.din2,
             expected_resp, expected_dout, expected_dout,
             resp, dout, dout, port_number, ticks);
     };
 
     private check_response_matches(expected_resp: response_t): bool is {
-        var cmd_name: string = appendf("INV%u", input.cmd_in);
-        if (input.cmd_in in set_of_values(opcode_t)) {
-            cmd_name = input.cmd_in.as_a(opcode_t).as_a(string);
-        };
         check that resp == expected_resp then {
+            msg_info(LOW, appendf("Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),   completed on port: %u,   after: %d ticks",
+                input.cmd_name(), input.din1, input.din1, input.din2, input.din2, port_number, ticks));
             result = TRUE;
         } else dut_errorf("\
 Instruction %s,   OP1 0x%X (%u),   OP2 0x%X (%u),\n\
 expected %s received %s    on port: %u,   after: %d ticks",
-            cmd_name, input.din1, input.din1, input.din2, input.din2,
+            input.cmd_name(), input.din1, input.din1, input.din2, input.din2,
             expected_resp, resp, port_number, ticks);
     };
-
 };
 
 '>
