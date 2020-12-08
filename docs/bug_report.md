@@ -1,9 +1,10 @@
 # Bug Report
 
 Bugs 1 through 4 apply to those controlled by the `error_found` bit flags in `calc1_sn.v`.
-They can be demonstrated using specific test cases described in `tests.e`
 
-## 1: Addition
+All of these bugs can be demonstrated using specific test cases defined in `tests.e`
+
+## 1: Addition with Certain Bits
 
 Addition produces the wrong result when the second operand matches these conditions:
 For both the least or second least significant bytes of the (4 byte integer):
@@ -13,6 +14,11 @@ It will break if one of (not both) the 5th or 6th LSBs are set.
 
 This bug changes the behaviour of shifting left by 0 (or `din2 mod 32 == 0`)
 where it returns 0 instead of the un-shifted `din1`
+
+## 3: Addition Overflow
+
+This bug causes the `ADD` opcode to always return success (response 2) even when the input should
+cause an overflow (response 3).
 
 ## 5: Subtraction Response Code
 
