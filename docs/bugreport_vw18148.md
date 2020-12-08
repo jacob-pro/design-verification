@@ -1,8 +1,3 @@
----
-geometry: margin=2cm
-output: pdf_document
----
-
 # Bug Report
 
 All of these bugs can be demonstrated using specific test cases defined in `tests.e`
