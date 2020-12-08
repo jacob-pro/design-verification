@@ -11,8 +11,9 @@ extend instruction_input_s {
 
 extend driver_u {
     keep tests_to_drive.size() == 1;
-    keep tests_to_drive[0].name == "Random mix";
+    keep tests_to_drive[0].name == "Random mix (parallel)";
     keep tests_to_drive[0].instructions.size() == 200;
+    keep tests_to_drive[0].execute_mode == PARALLEL;
 
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {
@@ -119,6 +120,28 @@ extend driver_u {
             };
         };
         tests_to_drive.add(inv);
+
+        // Bug 9: Priority
+        var pri: test_group_s;
+        gen pri keeping {
+            .name == "ADD/SUB in parallel";
+            .execute_mode == PARALLEL;
+            .instructions.size() == 20;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'ADD.as_a(uint) || i.cmd_in == opcode_t'SUB.as_a(uint);
+            };
+        };
+        tests_to_drive.add(pri);
+        var pri2: test_group_s;
+        gen pri2 keeping {
+            .name == "SHL/SHR in parallel";
+            .execute_mode == PARALLEL;
+            .instructions.size() == 20;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'SHL.as_a(uint) || i.cmd_in == opcode_t'SHR.as_a(uint);
+            };
+        };
+        tests_to_drive.add(pri2);
 
     }
 };

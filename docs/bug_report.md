@@ -33,3 +33,7 @@ An invalid operation responds with success (1) instead of invalid command (2)
 as defined in the specification.
 
 ## 9: Priority Logic
+
+When all four ports are sent a series of ADD/SUB (or shift) instructions at the same time, 
+then ports 3 and 4 appear to get "stuck", and do not complete until ports 1 and 2 are no longer
+in use. This is a violation of the first come first serve priority described in the specification,
