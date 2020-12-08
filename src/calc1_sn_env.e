@@ -20,6 +20,7 @@ extend sys {
 
     setup() is also {
         set_check("...", ERROR_CONTINUE);   // don't quit the simulation on error
+        set_config(run, tick_max, 50000);
     };
 
     run() is also {

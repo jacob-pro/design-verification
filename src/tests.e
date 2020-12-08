@@ -17,6 +17,29 @@ extend driver_u {
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {
 
+        //Bug 1 - Addition
+        var add1: test_group_s;
+        gen add1 keeping {
+            .name == "ADD exclude broken bit combo (should pass)";
+            .instructions.size() == 100;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'ADD.as_a(uint);
+                ((i.din2 + 16) / 32) % 2 == 0;
+                ((((i.din2 & 255 << 8) >> 8) + 16) / 32) % 2 == 0;
+            };
+        };
+        tests_to_drive.add(add1);
+        var add2: test_group_s;
+        gen add2 keeping {
+            .name == "ADD broken bit combo (will fail)";
+            .instructions.size() == 100;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'ADD.as_a(uint);
+                (((i.din2 + 16) / 32) % 2 != 0) || (((((i.din2 & 255 << 8) >> 8) + 16) / 32) % 2 != 0);
+            };
+        };
+        tests_to_drive.add(add2);
+
         //Bug 5 - Subtraction always returns overflow/invalid
         var subo: test_group_s;
         gen subo keeping {
@@ -63,7 +86,7 @@ extend driver_u {
         };
         tests_to_drive.add(shr2);
 
-        // There is a bug with SHL by anything greater than 2 bits
+        // Bug 7: There is a bug with SHL by anything greater than 2 bits
         var shl_1: test_group_s;
         gen shl_1 keeping {
             .name == "SHL, Shift by 2 bits or less (should pass)";
@@ -85,6 +108,17 @@ extend driver_u {
             };
         };
         tests_to_drive.add(shl_2);
+
+        // Bug 8: Invalids
+        var inv: test_group_s;
+        gen inv keeping {
+            .name == "Invalid opcodes (will fail)";
+            .instructions.size() == 10;
+            for each (i) in .instructions {
+                i.cmd_in not in set_of_values(opcode_t);
+            };
+        };
+        tests_to_drive.add(inv);
 
     }
 };
