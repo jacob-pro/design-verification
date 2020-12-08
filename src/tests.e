@@ -11,9 +11,8 @@ extend instruction_input_s {
 
 extend driver_u {
     keep tests_to_drive.size() == 1;
-    keep tests_to_drive[0].name == "Random mix (parallel)";
+    keep tests_to_drive[0].name == "Random mix";
     keep tests_to_drive[0].instructions.size() == 200;
-    keep tests_to_drive[0].execute_mode == PARALLEL;
 
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {
@@ -86,10 +85,26 @@ extend driver_u {
         };
         tests_to_drive.add(bug3b);
 
+        // Bug 4
+        var bug4a: test_group_s;
+        gen bug4a keeping {
+            .name == "Run on ports 1-3 (should not timeout)";
+            .instructions.size() == 10;
+            .execute_mode == PORT1 || .execute_mode == PORT2 || .execute_mode == PORT3;
+        };
+        tests_to_drive.add(bug4a);
+        var bug4b: test_group_s;
+        gen bug4b keeping {
+            .name == "Run on ports 1-3 (this test will timeout if b1110)";
+            .instructions.size() == 10;
+            .execute_mode == PORT4;
+        };
+        tests_to_drive.add(bug4b);
+
         // Bug 5: Subtraction always returns overflow/invalid
         var bug5a: test_group_s;
         gen bug5a keeping {
-            .name == "SUB a number by a larger number (should pass if bugs disabled)";
+            .name == "SUB a number by a larger number (should pass if b1111)";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SUB.as_a(uint);
@@ -100,7 +115,7 @@ extend driver_u {
         tests_to_drive.add(bug5a);
         var bug5b: test_group_s;
         gen bug5b keeping {
-            .name == "SUB a number by a smaller number (will fail if bugs disabled)";
+            .name == "SUB a number by a smaller number (will fail if b1111)";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SUB.as_a(uint);
@@ -113,7 +128,7 @@ extend driver_u {
         // Bug 6: There is a bug with SHR by 1 bit
         var bug6a: test_group_s;
         gen bug6a keeping {
-            .name == "SHR, Excluding shift by 1 bit (should pass if bugs disabled)";
+            .name == "SHR, Excluding shift by 1 bit (should pass if b1111)";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHR.as_a(uint);
@@ -123,7 +138,7 @@ extend driver_u {
         tests_to_drive.add(bug6a);
         var bug6b: test_group_s;
         gen bug6b keeping {
-            .name == "SHR, Shift by 1 bit only (will fail if bugs disabled)";
+            .name == "SHR, Shift by 1 bit only (will fail if b1111)";
             .instructions.size() == 20;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHR.as_a(uint);
@@ -135,7 +150,7 @@ extend driver_u {
         // Bug 7: There is a bug with SHL by anything greater than 2 bits
         var bug7a: test_group_s;
         gen bug7a keeping {
-            .name == "SHL, Shift by 2 bits or less (should pass if bugs disabled)";
+            .name == "SHL, Shift by 2 bits or less (should pass if b1111)";
             .instructions.size() == 20;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHL.as_a(uint);
@@ -145,7 +160,7 @@ extend driver_u {
         tests_to_drive.add(bug7a);
         var bug7b: test_group_s;
         gen bug7b keeping {
-            .name == "SHL, Shift by 3 bits or more (will fail if bugs disabled)";
+            .name == "SHL, Shift by 3 bits or more (will fail if b1111)";
             .instructions.size() == 60;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'SHL.as_a(uint);

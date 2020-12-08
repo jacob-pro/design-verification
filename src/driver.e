@@ -14,7 +14,7 @@ struct test_group_s {
     name: string;
     instructions : list of instruction_input_s;
     execute_mode: execute_t;
-    keep soft execute_mode == PARALLEL;
+    keep soft execute_mode == PORT1;
 };
 
 unit port_u {
