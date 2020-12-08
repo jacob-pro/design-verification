@@ -18,7 +18,7 @@ extend driver_u {
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {
 
-        //Bug 1 - Addition
+        // Bug 1 - Addition
         var add1: test_group_s;
         gen add1 keeping {
             .name == "ADD exclude broken bit combo (should pass)";
@@ -32,7 +32,7 @@ extend driver_u {
         tests_to_drive.add(add1);
         var add2: test_group_s;
         gen add2 keeping {
-            .name == "ADD broken bit combo (will fail)";
+            .name == "ADD broken bit combo (will fail if b0111)";
             .instructions.size() == 100;
             for each (i) in .instructions {
                 i.cmd_in == opcode_t'ADD.as_a(uint);
@@ -41,7 +41,30 @@ extend driver_u {
         };
         tests_to_drive.add(add2);
 
-        //Bug 5 - Subtraction always returns overflow/invalid
+        // Bug 2
+        var shl_4: test_group_s;
+        gen shl_4 keeping {
+            .name == "SHL, shift by 1 or 2 (should pass)";
+            .instructions.size() == 20;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'SHL.as_a(uint);
+                (i.din2 % 32) >= 1;
+                (i.din2 % 32) <= 2;
+            };
+        };
+        tests_to_drive.add(shl_4);
+        var shl_3: test_group_s;
+        gen shl_3 keeping {
+            .name == "SHL, shift by 0 (will fail if b1011)";
+            .instructions.size() == 20;
+            for each (i) in .instructions {
+                i.cmd_in == opcode_t'SHL.as_a(uint);
+                (i.din2 % 32) == 0;
+            };
+        };
+        tests_to_drive.add(shl_3);
+
+        // Bug 5 - Subtraction always returns overflow/invalid
         var subo: test_group_s;
         gen subo keeping {
             .name == "SUB a number by a larger number (should pass)";

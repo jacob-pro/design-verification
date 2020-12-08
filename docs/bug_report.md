@@ -9,6 +9,11 @@ Addition produces the wrong result when the second operand matches these conditi
 For both the least or second least significant bytes of the (4 byte integer):
 It will break if one of (not both) the 5th or 6th LSBs are set.
 
+## 2: Shift Left By 0
+
+This bug changes the behaviour of shifting left by 0 (or `din2 mod 32 == 0`)
+where it returns 0 instead of the un-shifted `din1`
+
 ## 5: Subtraction Response Code
 
 The subtraction (`SUB`) operation always returns an overflow error (response 3) even when the input 
