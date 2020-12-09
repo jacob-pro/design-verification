@@ -11,8 +11,9 @@ extend instruction_input_s {
 
 extend driver_u {
     keep tests_to_drive.size() == 1;
-    keep tests_to_drive[0].name == "Random mix";
+    keep tests_to_drive[0].name == "Random mix (single port)";
     keep tests_to_drive[0].instructions.size() == 200;
+    keep tests_to_drive[0].execute_mode == PORT1;
 
     // Some more specific/directed tests to figure out the bugs
     post_generate() is also {
@@ -202,6 +203,15 @@ extend driver_u {
             };
         };
         tests_to_drive.add(bug9b);
+
+        // Random mix: we need to do this at the end in case bug 4 is switched on
+        var parallel: test_group_s;
+        gen parallel keeping {
+            .name == "Random mix (parallel)";
+            .execute_mode == PARALLEL;
+            .instructions.size() == 200;
+        };
+        tests_to_drive.add(parallel);
 
     }
 };

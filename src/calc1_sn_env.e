@@ -12,7 +12,7 @@
 import instruction;       //  pull in instruction data structure definitions
 import driver;            //  pull in driver definitions
 import tests;             //  pull in current test data
-//import coverage;          //  pull in coverage metric and collection events
+import coverage;          //  pull in coverage metric and collection events
 
 extend sys {
 
@@ -37,4 +37,3 @@ extend dut_error_struct {
 };
 
 '>
-

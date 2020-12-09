@@ -3,7 +3,7 @@
    --------------------
    The driver interacts directly with the DUV by driving test data into
    the DUV and collecting the response from the DUV. It also invokes the
-   instruction specific response checker. 
+   instruction response checker.
 
 <'
 import queue_checker;
