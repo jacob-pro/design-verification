@@ -1,9 +1,9 @@
 ---
 geometry: margin=2cm
 output: pdf_document
+author: Jacob Halsey
+title: Coverage Report
 ---
-
-# Coverage Report
 
 ## Code Coverage
 

@@ -1,9 +1,9 @@
 ---
 geometry: margin=2cm
 output: pdf_document
+author: Jacob Halsey
+title: Bug Report
 ---
-
-# Bug Report
 
 All of these bugs can be demonstrated using specific test cases defined in `tests.e`
 
@@ -38,14 +38,14 @@ should not have overflown (the output data value is still correct).
 ### 6: Shift Right by One
 
 The shift right (`SHR`) operation fails to shift by one bit (or more specifically when 
-`din2 mod 32 == 1`). Instead the un-shifted operand1 is returned.\
+`din2 mod 32 == 1`). Instead the un-shifted operand1 is returned.
 Shifting by greater than 1 bit works fine.
 
 ### 7: Shift Left by Three or More
 
-The shift left (`SHL`) operation fails when shifting by three or more bits.\
-Where `A` is `din2 mod 32`, and A >= 3. Then the results have an offset of 2^(A-3).\
-E.g. shifting left by 10, the result is 128 larger than expected.\
+The shift left (`SHL`) operation fails when shifting by three or more bits. 
+Where `A` is `din2 mod 32`, and A >= 3. Then the results have an offset of 2^(A-3).
+E.g. shifting left by 10, the result is 128 larger than expected.
 (Shifting by 0, 1 or 2 bits still works as expected)
 
 ### 8: Invalid operations
